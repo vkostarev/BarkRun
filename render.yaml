@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: barkrun
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12
+      - key: FLASK_ENV
+        value: production
+    disks:
+      - name: data
+        mountPath: /opt/render/project/src/instance
+        sizeGB: 1

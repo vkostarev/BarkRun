@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Add Race - BarkRun{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-flag-checkered text-success"></i> Create New Race</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Race Name *</label>
+                        <input type="text" class="form-control" id="name" name="name" required placeholder="e.g., Spring Marathon 2025">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="distance" class="form-label">Distance (km) *</label>
+                                <input type="number" class="form-control" id="distance" name="distance" step="0.1" min="0.1" required placeholder="e.g., 5, 10, 21.1, 42.2">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="date" class="form-label">Race Date *</label>
+                                <input type="date" class="form-control" id="date" name="date" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location" placeholder="e.g., Central Park, New York">
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('races') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Create Race
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

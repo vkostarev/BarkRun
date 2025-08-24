@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - {{ user.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card profile-card">
+            <div class="card-body text-center">
+                <i class="fas fa-crown fa-4x mb-3"></i>
+                <h4>{{ user.name }}</h4>
+                <p class="mb-2">{{ user.email }}</p>
+                <span class="badge bg-light text-dark">{{ user.role.title() }}</span>
+                <hr class="my-4">
+                <div class="row text-center">
+                    <div class="col-12">
+                        <h5>{{ user.created_at | format_dt_paris('%Y-%m-%d %H:%M %Z') }}</h5>
+                        <small>Admin Since</small>
+                    </div>
+                </div>
+                <p class="mt-3 mb-0"><small>System administration dashboard</small></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-tools"></i> Admin Tools</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card bg-light h-100">
+                            <div class="card-body">
+                                <h6><i class="fas fa-users"></i> User Management</h6>
+                                <p class="text-muted mb-2">View all users and their roles.</p>
+                                <a href="{{ url_for('users') }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-users"></i> Go to Users
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light h-100">
+                            <div class="card-body">
+                                <h6><i class="fas fa-flag-checkered"></i> Races</h6>
+                                <p class="text-muted mb-2">Browse and manage all races.</p>
+                                <a href="{{ url_for('races') }}" class="btn btn-outline-success btn-sm">
+                                    <i class="fas fa-list"></i> View Races
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle"></i> More admin features can be added later (role editing, user deactivation, exports).
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

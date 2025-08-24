@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Photos - {{ race.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1><i class="fas fa-upload text-secondary"></i> Upload Photos</h1>
+      <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Profile
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">{{ race.name }}</h5>
+        <p class="text-muted mb-4">
+          Start: {{ race.start_time | format_dt_paris('%Y-%m-%d %H:%M %Z') }} · Race ID: #{{ race.id }}
+        </p>
+
+        <form method="POST" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="photos" class="form-label">
+              Choose images from your device (you can select multiple):
+            </label>
+            <input
+              id="photos"
+              name="photos"
+              type="file"
+              class="form-control"
+              accept="image/*"
+              multiple
+            />
+            <div class="form-text">
+              Supported formats: JPG, JPEG, PNG, GIF, WEBP, HEIC/HEIF, AVIF, BMP, TIFF. Max total 64 MB per upload.
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="cameraInput" class="form-label">Or take photos now (mobile):</label>
+            <input
+              id="cameraInput"
+              name="photos"
+              type="file"
+              class="form-control"
+              accept="image/*"
+              capture="environment"
+              multiple
+            />
+            <div class="form-text">
+              On supported phones, this opens the camera or gallery.
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-cloud-upload-alt"></i> Upload Selected Photos
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="mb-2"><i class="fas fa-info-circle"></i> Tips</h6>
+        <ul class="mb-0">
+          <li><strong>Multiple selection</strong>: hold Ctrl/Cmd to select many on desktop.</li>
+          <li><strong>From phone</strong>: use either field; your gallery/camera will open.</li>
+          <li><strong>Duplicates</strong>: files with the same name get a numeric suffix.</li>
+          <li><strong>Where stored</strong>: instance/uploads/race_{{ race.id }}/</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

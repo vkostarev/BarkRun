@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Results - BarkRun{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-trophy text-warning"></i> Results</h1>
+        </div>
+    </div>
+</div>
+
+{% if all_races is defined %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <strong><i class="fas fa-camera me-2"></i>Your races with photo status</strong>
+            </div>
+            <div class="card-body p-0">
+                {% if all_races %}
+                <div class="list-group list-group-flush">
+                    {% for race in all_races %}
+                    {% set claimed = race.id in claimed_race_ids %}
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                       href="{{ url_for('my_race_photos', race_id=race.id) if claimed else url_for('find_me', race_id=race.id) }}">
+                        <span class="d-flex align-items-center gap-2">
+                            {% if claimed %}
+                                {% set rank = claimed_photo_rank_by_race.get(race.id) if claimed_photo_rank_by_race is defined else None %}
+                                {% if rank %}
+                                <span class="badge bg-info text-dark">#{{ rank }}</span>
+                                {% endif %}
+                                <i class="fas fa-flag-checkered text-secondary"></i>
+                                <span class="ms-1">{{ race.name }}</span>
+                            {% else %}
+                                <i class="fas fa-camera text-danger"></i>
+                                <strong class="ms-1">{{ race.name }}</strong>
+                            {% endif %}
+                        </span>
+                        <small class="text-muted">{{ race.date.strftime('%Y-%m-%d') }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="p-3 text-muted">No races available.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    </div>
+{% endif %}
+
+{% if results %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Participant</th>
+                                <th>Race</th>
+                                <th>Distance</th>
+                                <th>Finish Time</th>
+                                <th>Pace</th>
+                                <th>Position</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr>
+                                <td>
+                                    <strong>{{ result.participant.name if result.participant else 'Unknown' }}</strong>
+                                </td>
+                                <td>{{ result.race.name }}</td>
+                                <td>{{ result.race.distance }} km</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ result.finish_time | format_time }}</span>
+                                </td>
+                                <td>{{ result.pace | format_pace }}/km</td>
+                                <td>
+                                    {% if result.position %}
+                                        <span class="badge bg-success">#{{ result.position }}</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ result.created_at | format_dt_paris('%Y-%m-%d %H:%M %Z') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

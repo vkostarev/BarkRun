@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.name }} - Profile{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card profile-card">
+            <div class="card-body text-center">
+                <i class="fas fa-running fa-4x mb-3"></i>
+                <h4>{{ user.name }}</h4>
+                <p class="mb-2">{{ user.email }}</p>
+                <span class="badge bg-light text-dark">{{ user.role.title() }}</span>
+                
+                <hr class="my-4">
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h5>{{ user.age or '-' }}</h5>
+                        <small>Age</small>
+                    </div>
+                    <div class="col-6">
+                        <h5>{{ user.gender or '-' }}</h5>
+                        <small>Gender</small>
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <h5>{{ results|length }}</h5>
+                    <small>Race Results</small>
+                </div>
+                
+                <p class="mt-3 mb-0"><small>Member since {{ user.created_at | format_dt_paris('%B %Y') }}</small></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-trophy"></i> My Race Results</h5>
+            </div>
+            <div class="card-body">
+                {% if results %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Race</th>
+                                <th>Distance</th>
+                                <th>Time</th>
+                                <th>Pace</th>
+                                <th>Position</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr>
+                                <td><strong>{{ result.race.name }}</strong></td>
+                                <td>{{ result.race.distance }} km</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ result.finish_time | format_time }}</span>
+                                </td>
+                                <td>{{ result.pace | format_pace }}/km</td>
+                                <td>
+                                    {% if result.position %}
+                                        <span class="badge bg-success">#{{ result.position }}</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ result.created_at | format_dt_paris('%Y-%m-%d %H:%M %Z') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if results|length > 1 %}
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6>Best Time</h6>
+                                {% set best_result = results | min(attribute='finish_time') %}
+                                <h4 class="text-primary">{{ best_result.finish_time | format_time }}</h4>
+                                <small class="text-muted">{{ best_result.race.name }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6>Best Pace</h6>
+                                {% set best_pace = results | min(attribute='pace') %}
+                                <h4 class="text-success">{{ best_pace.pace | format_pace }}/km</h4>
+                                <small class="text-muted">{{ best_pace.race.name }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-running fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No race results yet</h5>
+                    <p class="text-muted">Your race results will appear here once you participate in races.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

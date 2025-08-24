@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Add Result - BarkRun{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-stopwatch text-warning"></i> Record Race Result</h4>
+            </div>
+            <div class="card-body">
+                {% if participants and races %}
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="participant_id" class="form-label">Participant *</label>
+                                <select class="form-select" id="participant_id" name="participant_id" required>
+                                    <option value="">Select Participant</option>
+                                    {% for participant in participants %}
+                                    <option value="{{ participant.id }}">{{ participant.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="race_id" class="form-label">Race *</label>
+                                <select class="form-select" id="race_id" name="race_id" required>
+                                    <option value="">Select Race</option>
+                                    {% for race in races %}
+                                    <option value="{{ race.id }}">{{ race.name }} ({{ race.distance }}km)</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="finish_time" class="form-label">Finish Time (HH:MM:SS) *</label>
+                                <input type="text" class="form-control" id="finish_time" name="finish_time" required placeholder="01:30:45" pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}">
+                                <div class="form-text">Format: Hours:Minutes:Seconds</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="position" class="form-label">Position (Optional)</label>
+                                <input type="number" class="form-control" id="position" name="position" min="1" placeholder="1">
+                                <div class="form-text">Overall finishing position</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('results') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save"></i> Record Result
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                    <h5>Missing Requirements</h5>
+                    <p class="text-muted">You need at least one participant and one race to record results.</p>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        {% if not races %}
+                        <a href="{{ url_for('add_race') }}" class="btn btn-success">
+                            <i class="fas fa-flag"></i> Add Race
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
