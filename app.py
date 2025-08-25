@@ -113,6 +113,37 @@ class Photo(db.Model):
     timestamp = db.Column(db.DateTime, nullable=True)  # when photo was taken (from EXIF if available)
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+# --- App initialization helpers (no-shell DB bootstrap for Render) ---
+def _initialize_db_and_admin():
+    """Create tables and a default admin if the DB is fresh."""
+    with app.app_context():
+        db.create_all()
+        # Create default admin only if none exists
+        if not User.query.filter_by(role='admin').first():
+            admin = User(
+                username='admin',
+                email='admin@barkrun.local',
+                name='Administrator',
+                role='admin',
+            )
+            admin.set_password('admin123')
+            db.session.add(admin)
+            db.session.commit()
+
+def _ensure_app_initialized_once():
+    """Ensure instance paths exist and initialize DB on first boot.
+    This runs at process start and is idempotent due to file existence checks.
+    """
+    # Ensure uploads directory exists
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    # If the DB file does not exist, perform initialization
+    db_path = os.path.join(app.instance_path, 'barkrun.db')
+    if not os.path.exists(db_path):
+        _initialize_db_and_admin()
+
+# Call after models are defined so queries work
+_ensure_app_initialized_once()
+
 # Role-based access decorators
 def admin_required(f):
     @wraps(f)
