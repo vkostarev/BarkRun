@@ -769,6 +769,11 @@ def api_stats():
     }
     return jsonify(stats)
 
+@app.route('/health')
+def health_check():
+    """Lightweight health check endpoint for keep-alive pings."""
+    return jsonify({'status': 'ok', 'timestamp': datetime.utcnow().isoformat()})
+
 # Utility functions
 def format_time(seconds):
     hours = seconds // 3600

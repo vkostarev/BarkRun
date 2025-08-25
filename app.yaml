@@ -1,0 +1,30 @@
+runtime: python312
+
+# App Engine automatically handles scaling and load balancing
+automatic_scaling:
+  min_instances: 0
+  max_instances: 10
+
+# Environment variables
+env_variables:
+  FLASK_ENV: production
+  # Add your secret key here or use Secret Manager
+  # SECRET_KEY: "your-production-secret-key"
+
+# Resource limits for free tier optimization
+resources:
+  cpu: 1
+  memory_gb: 0.5
+
+# Handle static files efficiently
+handlers:
+- url: /static
+  static_dir: static
+  secure: always
+
+- url: /.*
+  script: auto
+  secure: always
+
+# File upload size limit (matches your app's 64MB limit)
+# Note: App Engine has a 32MB request limit, so you may need to adjust

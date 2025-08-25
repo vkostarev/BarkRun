@@ -1,0 +1,31 @@
+name: Keep Alive
+
+on:
+  schedule:
+    # Run every 8 minutes (GitHub Actions minimum is 5 minutes)
+    - cron: '*/8 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Ping App
+      run: |
+        # Replace YOUR_APP_URL with your actual Render URL
+        APP_URL="https://your-app-name.onrender.com"
+        
+        echo "🚀 Pinging $APP_URL at $(date)"
+        
+        # Try the stats endpoint first (lightweight)
+        if curl -f -s --max-time 30 "$APP_URL/api/stats" > /dev/null; then
+          echo "✅ Ping successful via /api/stats"
+        elif curl -f -s --max-time 30 "$APP_URL/" > /dev/null; then
+          echo "✅ Ping successful via homepage"
+        else
+          echo "❌ Ping failed - app may be starting up"
+          exit 1
+        fi
+        
+        echo "⏰ Next ping in ~8 minutes"
