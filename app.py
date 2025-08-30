@@ -456,6 +456,38 @@ def add_race():
         return redirect(url_for('races'))
     return render_template('add_race.html')
 
+@app.route('/races/<int:race_id>/delete', methods=['POST'])
+@login_required
+def delete_race(race_id):
+    race = Race.query.get_or_404(race_id)
+    
+    # Check permissions - only admin or race organizer can delete
+    if not (current_user.is_admin() or (current_user.is_organizer() and race.organizer_id == current_user.id)):
+        flash('You do not have permission to delete this race.', 'error')
+        return redirect(url_for('races'))
+    
+    try:
+        # Delete associated photos from filesystem
+        race_photos_dir = os.path.join(app.config['UPLOAD_FOLDER'], f'race_{race.id}')
+        if os.path.exists(race_photos_dir):
+            import shutil
+            shutil.rmtree(race_photos_dir)
+        
+        # Delete associated records (cascade should handle this, but being explicit)
+        Photo.query.filter_by(race_id=race.id).delete()
+        Result.query.filter_by(race_id=race.id).delete()
+        
+        # Delete the race
+        db.session.delete(race)
+        db.session.commit()
+        
+        flash(f'Race from {race.start_time.strftime("%Y-%m-%d %H:%M")} has been deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting race: {str(e)}', 'error')
+    
+    return redirect(url_for('races'))
+
 @app.route('/results')
 @login_required
 def results():

@@ -47,6 +47,13 @@
                                         <i class="fas fa-upload"></i> Upload Photos
                                     </a>
                                     {% endif %}
+                                    {% if current_user.is_admin() or (current_user.is_organizer() and race.organizer_id == current_user.id) %}
+                                    <button class="btn btn-sm btn-outline-danger delete-race-btn" 
+                                            data-race-id="{{ race.id }}" 
+                                            data-race-date="{{ race.start_time | format_dt_paris('%Y-%m-%d %H:%M') }}">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -64,5 +71,39 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handlers to delete buttons
+    document.querySelectorAll('.delete-race-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const raceId = this.dataset.raceId;
+            const raceDate = this.dataset.raceDate;
+            
+            if (confirm(`Are you sure you want to delete the race from ${raceDate}?\n\nThis will permanently delete:\n- The race record\n- All associated photos\n- All race results\n\nThis action cannot be undone.`)) {
+                // Create form and submit
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/races/${raceId}/delete`;
+                
+                // Add CSRF token if available
+                const csrfToken = document.querySelector('meta[name=csrf-token]');
+                if (csrfToken) {
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrf_token';
+                    csrfInput.value = csrfToken.getAttribute('content');
+                    form.appendChild(csrfInput);
+                }
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+});
+</script>
 {% endblock %}
 
