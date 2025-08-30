@@ -150,7 +150,8 @@ def _initialize_db_and_admin():
     with app.app_context():
         # Only create tables if schema doesn't exist
         if not _check_db_schema_exists():
-            db.create_all()
+            # db.create_all()  # Commented out to prevent schema recreation
+            pass
         
         # Create default admin only if none exists
         if not User.query.filter_by(role='admin').first():
@@ -913,7 +914,8 @@ if __name__ == '__main__':
     with app.app_context():
         # Use the same schema-aware initialization as production
         if not _check_db_schema_exists():
-            db.create_all()
+            # db.create_all()  # Commented out to prevent schema recreation
+            pass
         
         # Create a default admin user if none exists
         if not User.query.filter_by(role='admin').first():

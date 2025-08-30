@@ -15,8 +15,8 @@ if __name__ == "__main__":
         # Only create tables if schema doesn't exist
         schema_exists = check_db_schema_exists()
         if not schema_exists:
-            db.create_all()
-            print("Created database schema")
+            # db.create_all()  # Commented out to prevent schema recreation
+            print("Schema creation disabled - database schema will not be created")
         else:
             print("Database schema already exists, preserving existing data")
         
