@@ -138,11 +138,16 @@ def _check_db_schema_exists():
     """Check if database schema already exists by querying for tables."""
     try:
         with app.app_context():
-            # Try to query the User table to see if schema exists
-            db.session.execute(db.text("SELECT 1 FROM user LIMIT 1"))
-            return True
-    except Exception:
-        # If query fails, schema doesn't exist or is incomplete
+            # Use inspector to safely check for table existence without querying data
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            tables = inspector.get_table_names()
+            required_tables = {'user', 'race', 'result', 'photo'}
+            schema_complete = required_tables.issubset(set(tables))
+            print(f"Schema check: Found tables {tables}, Complete: {schema_complete}")
+            return schema_complete
+    except Exception as e:
+        print(f"Schema check failed: {e}")
         return False
 
 def _initialize_db_and_admin():
@@ -150,8 +155,10 @@ def _initialize_db_and_admin():
     with app.app_context():
         # Only create tables if schema doesn't exist
         if not _check_db_schema_exists():
-            # db.create_all()  # Commented out to prevent schema recreation
-            pass
+            print("Creating database schema...")
+            db.create_all()
+        else:
+            print("Database schema already exists, skipping creation")
         
         # Create default admin only if none exists
         if not User.query.filter_by(role='admin').first():
@@ -378,6 +385,42 @@ def update_user_role(user_id):
     user.role = new_role
     db.session.commit()
     flash(f"Updated role for {user.username} to {new_role}.", 'success')
+    return redirect(url_for('users'))
+
+@app.route('/users/<int:user_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent deleting yourself
+    if user.id == current_user.id:
+        flash('You cannot delete your own account.', 'error')
+        return redirect(url_for('users'))
+    
+    # Prevent deleting the last admin
+    admin_count = User.query.filter_by(role='admin').count()
+    if user.role == 'admin' and admin_count <= 1:
+        flash('Cannot delete the last admin.', 'error')
+        return redirect(url_for('users'))
+    
+    try:
+        # Delete associated records
+        Photo.query.filter_by(user_id=user.id).update({'user_id': None})  # Unlink photos instead of deleting
+        Result.query.filter_by(participant_id=user.id).delete()
+        
+        # Update races organized by this user to have no organizer
+        Race.query.filter_by(organizer_id=user.id).update({'organizer_id': None})
+        
+        # Delete the user
+        db.session.delete(user)
+        db.session.commit()
+        
+        flash(f'User {user.username} has been deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting user: {str(e)}', 'error')
+    
     return redirect(url_for('users'))
 
 @app.route('/races')
@@ -946,8 +989,10 @@ if __name__ == '__main__':
     with app.app_context():
         # Use the same schema-aware initialization as production
         if not _check_db_schema_exists():
-            # db.create_all()  # Commented out to prevent schema recreation
-            pass
+            print("Creating database schema...")
+            db.create_all()
+        else:
+            print("Database schema already exists, skipping creation")
         
         # Create a default admin user if none exists
         if not User.query.filter_by(role='admin').first():

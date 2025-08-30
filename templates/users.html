@@ -38,14 +38,23 @@
                                 <td>{{ u.username }}</td>
                                 <td>{{ u.email }}</td>
                                 <td>
-                                    <form class="d-flex align-items-center gap-2" method="POST" action="{{ url_for('update_user_role', user_id=u.id) }}">
-                                        <select class="form-select form-select-sm" name="role" style="max-width: 160px;">
-                                            <option value="participant" {% if u.role=='participant' %}selected{% endif %}>Participant</option>
-                                            <option value="organizer" {% if u.role=='organizer' %}selected{% endif %}>Organizer</option>
-                                            <option value="admin" {% if u.role=='admin' %}selected{% endif %}>Admin</option>
-                                        </select>
-                                        <button type="submit" class="btn btn-sm btn-outline-primary">Update</button>
-                                    </form>
+                                    <div class="d-flex flex-column gap-2">
+                                        <form class="d-flex align-items-center gap-2" method="POST" action="{{ url_for('update_user_role', user_id=u.id) }}">
+                                            <select class="form-select form-select-sm" name="role" style="max-width: 160px;">
+                                                <option value="participant" {% if u.role=='participant' %}selected{% endif %}>Participant</option>
+                                                <option value="organizer" {% if u.role=='organizer' %}selected{% endif %}>Organizer</option>
+                                                <option value="admin" {% if u.role=='admin' %}selected{% endif %}>Admin</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">Update</button>
+                                        </form>
+                                        {% if u.id != current_user.id %}
+                                        <form method="POST" action="{{ url_for('delete_user', user_id=u.id) }}" onsubmit="return confirm('Are you sure you want to delete user {{ u.username }}? This action cannot be undone.');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
                                 </td>
                                 <td>
                                     <span class="badge {% if u.role=='admin' %}bg-danger{% elif u.role=='organizer' %}bg-success{% else %}bg-primary{% endif %}">
