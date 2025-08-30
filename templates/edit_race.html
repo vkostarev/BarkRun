@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Race - BarkRun{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-edit text-primary"></i> Edit Race</h1>
+            <a href="{{ url_for('races') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Races
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Race Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Race Name</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ race.name }}" required>
+                        <div class="form-text">Give your race a descriptive name</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="distance" class="form-label">Distance (km)</label>
+                        <input type="number" step="0.1" class="form-control" id="distance" name="distance" 
+                               value="{{ race.distance }}" required>
+                        <div class="form-text">Race distance in kilometers</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location" 
+                               value="{{ race.location or '' }}">
+                        <div class="form-text">Where the race takes place</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Race Date</label>
+                        <input type="date" class="form-control" id="date" name="date" 
+                               value="{{ race.date.strftime('%Y-%m-%d') }}" required>
+                        <div class="form-text">The date of the race</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="start_time" class="form-label">Start Time (Paris timezone)</label>
+                        <input type="datetime-local" class="form-control" id="start_time" name="start_time" 
+                               value="{{ race.start_time | format_dt_paris('%Y-%m-%dT%H:%M') }}" required>
+                        <div class="form-text">When the race starts (Paris time)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="end_time" class="form-label">End Time (Paris timezone)</label>
+                        <input type="datetime-local" class="form-control" id="end_time" name="end_time" 
+                               value="{{ race.end_time | format_dt_paris('%Y-%m-%dT%H:%M') if race.end_time else '' }}">
+                        <div class="form-text">When the race ended (leave empty if ongoing)</div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <a href="{{ url_for('races') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Race Statistics -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Race Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h3 class="text-primary">{{ race.results|length }}</h3>
+                            <p class="text-muted">Results</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h3 class="text-success">{{ photo_count }}</h3>
+                            <p class="text-muted">Photos</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h3 class="text-info">{{ race.organizer.name if race.organizer else 'No organizer' }}</h3>
+                            <p class="text-muted">Organizer</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

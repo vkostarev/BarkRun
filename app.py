@@ -560,6 +560,57 @@ def add_race():
         return redirect(url_for('races'))
     return render_template('add_race.html')
 
+@app.route('/races/<int:race_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_race(race_id):
+    race = Race.query.get_or_404(race_id)
+    
+    # Check permissions - only admin or race organizer can edit
+    if not (current_user.is_admin() or (current_user.is_organizer() and race.organizer_id == current_user.id)):
+        flash('You do not have permission to edit this race.', 'error')
+        return redirect(url_for('races'))
+    
+    if request.method == 'POST':
+        try:
+            # Update race details
+            race.name = request.form['name']
+            race.distance = float(request.form['distance'])
+            race.location = request.form['location']
+            race.date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+            
+            # Handle start time - convert from Paris timezone to UTC
+            start_time_str = request.form['start_time']
+            if start_time_str:
+                # Parse as naive datetime, treat as Paris time, convert to UTC
+                paris_start = datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
+                paris_start_tz = paris_start.replace(tzinfo=PARIS_TZ)
+                race.start_time = paris_start_tz.astimezone(UTC_TZ).replace(tzinfo=None)
+            
+            # Handle end time - convert from Paris timezone to UTC
+            end_time_str = request.form['end_time']
+            if end_time_str:
+                paris_end = datetime.strptime(end_time_str, '%Y-%m-%dT%H:%M')
+                paris_end_tz = paris_end.replace(tzinfo=PARIS_TZ)
+                race.end_time = paris_end_tz.astimezone(UTC_TZ).replace(tzinfo=None)
+            else:
+                race.end_time = None
+            
+            db.session.commit()
+            flash(f'Race "{race.name}" updated successfully!', 'success')
+            return redirect(url_for('races'))
+            
+        except ValueError as e:
+            flash(f'Invalid input: {str(e)}', 'error')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating race: {str(e)}', 'error')
+    
+    # Get photo count for statistics
+    from sqlalchemy import func as sql_func
+    photo_count = db.session.query(sql_func.count(Photo.uid)).filter_by(race_id=race.id).scalar() or 0
+    
+    return render_template('edit_race.html', race=race, photo_count=photo_count)
+
 @app.route('/races/<int:race_id>/delete', methods=['POST'])
 @login_required
 def delete_race(race_id):
