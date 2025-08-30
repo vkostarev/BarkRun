@@ -14,12 +14,21 @@ import io
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
- # Ensure instance directory exists before using it
-os.makedirs(app.instance_path, exist_ok=True)
- # Point DB to instance/barkrun.db explicitly
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.instance_path, 'barkrun.db').replace('\\', '/')
+ # Use persistent volume path in production, instance path in development
+if os.environ.get('RAILWAY_ENVIRONMENT'):
+    # Production: Use Railway volume mount (you need to create a volume and set mount path)
+    PERSISTENT_DATA_PATH = os.environ.get('RAILWAY_VOLUME_MOUNT_PATH', '/data')
+else:
+    # Development: Use Flask's instance path
+    PERSISTENT_DATA_PATH = app.instance_path
+
+# Ensure data directory exists
+os.makedirs(PERSISTENT_DATA_PATH, exist_ok=True)
+
+# Point DB to persistent location
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(PERSISTENT_DATA_PATH, 'barkrun.db').replace('\\', '/')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = os.path.join(app.instance_path, 'uploads')
+app.config['UPLOAD_FOLDER'] = os.path.join(PERSISTENT_DATA_PATH, 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024  # 64MB per request
 
 db = SQLAlchemy(app)
