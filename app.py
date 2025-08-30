@@ -20,6 +20,8 @@ if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PORT'):
     # Production: Use Railway volume mount (you need to create a volume and set mount path)
     PERSISTENT_DATA_PATH = os.environ.get('RAILWAY_VOLUME_MOUNT_PATH', '/data')
     print(f"Railway detected - using persistent path: {PERSISTENT_DATA_PATH}")
+    print(f"WARNING: If database keeps getting wiped, Railway persistent volume is not properly configured!")
+    print(f"Check: 1) Volume is created, 2) Mount path is correct, 3) Volume is attached to service")
 else:
     # Development: Use Flask's instance path
     PERSISTENT_DATA_PATH = app.instance_path
