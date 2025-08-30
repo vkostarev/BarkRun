@@ -891,7 +891,10 @@ def inject_last_race():
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
+        # Use the same schema-aware initialization as production
+        if not _check_db_schema_exists():
+            db.create_all()
+        
         # Create a default admin user if none exists
         if not User.query.filter_by(role='admin').first():
             default_admin = User(
