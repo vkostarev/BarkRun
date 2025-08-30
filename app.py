@@ -574,12 +574,39 @@ def _extract_exif_timestamp(file_path: str):
                 return None
             # Map EXIF tag names
             tags = {ExifTags.TAGS.get(k, k): v for k, v in exif.items()}
+            
+            # Check for timezone offset fields (EXIF v2.31)
+            timezone_offset = None
+            for offset_key in ("OffsetTimeOriginal", "OffsetTimeDigitized", "OffsetTime"):
+                if offset_key in tags and isinstance(tags[offset_key], str):
+                    try:
+                        # Format: ±HH:MM (e.g., "+02:00")
+                        offset_str = tags[offset_key]
+                        if len(offset_str) == 6 and offset_str[3] == ':':
+                            hours = int(offset_str[1:3])
+                            minutes = int(offset_str[4:6])
+                            sign = 1 if offset_str[0] == '+' else -1
+                            timezone_offset = sign * (hours * 60 + minutes)  # minutes from UTC
+                            break
+                    except Exception:
+                        continue
+            
+            # Extract timestamp
             for key in ("DateTimeOriginal", "DateTimeDigitized", "DateTime"):
                 if key in tags and isinstance(tags[key], str):
                     dt_str = tags[key]
                     try:
                         # EXIF format: YYYY:MM:DD HH:MM:SS
-                        return datetime.strptime(dt_str, "%Y:%m:%d %H:%M:%S")
+                        naive_dt = datetime.strptime(dt_str, "%Y:%m:%d %H:%M:%S")
+                        
+                        if timezone_offset is not None:
+                            # Convert from photo's timezone to UTC
+                            utc_dt = naive_dt - timedelta(minutes=timezone_offset)
+                            return utc_dt
+                        else:
+                            # No timezone info - assume Paris timezone and convert to UTC
+                            paris_dt = naive_dt.replace(tzinfo=PARIS_TZ)
+                            return paris_dt.astimezone(UTC_TZ).replace(tzinfo=None)
                     except Exception:
                         continue
     except Exception:
