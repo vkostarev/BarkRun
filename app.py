@@ -15,15 +15,26 @@ import io
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
  # Use persistent volume path in production, instance path in development
-if os.environ.get('RAILWAY_ENVIRONMENT'):
+# Railway sets PORT environment variable, use that to detect production
+if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PORT'):
     # Production: Use Railway volume mount (you need to create a volume and set mount path)
     PERSISTENT_DATA_PATH = os.environ.get('RAILWAY_VOLUME_MOUNT_PATH', '/data')
+    print(f"Railway detected - using persistent path: {PERSISTENT_DATA_PATH}")
 else:
     # Development: Use Flask's instance path
     PERSISTENT_DATA_PATH = app.instance_path
+    print(f"Development mode - using instance path: {PERSISTENT_DATA_PATH}")
+
+# Debug: Print all Railway-related environment variables
+if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PORT'):
+    print("Railway environment variables:")
+    for key, value in os.environ.items():
+        if key.startswith('RAILWAY') or key == 'PORT':
+            print(f"  {key}={value}")
 
 # Ensure data directory exists
 os.makedirs(PERSISTENT_DATA_PATH, exist_ok=True)
+print(f"Database will be stored at: {os.path.join(PERSISTENT_DATA_PATH, 'barkrun.db')}")
 
 # Point DB to persistent location
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(PERSISTENT_DATA_PATH, 'barkrun.db').replace('\\', '/')
