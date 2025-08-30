@@ -34,7 +34,15 @@ if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PORT'):
 
 # Ensure data directory exists
 os.makedirs(PERSISTENT_DATA_PATH, exist_ok=True)
-print(f"Database will be stored at: {os.path.join(PERSISTENT_DATA_PATH, 'barkrun.db')}")
+db_path = os.path.join(PERSISTENT_DATA_PATH, 'barkrun.db')
+print(f"=== DATABASE INITIALIZATION DEBUG ===")
+print(f"PERSISTENT_DATA_PATH: {PERSISTENT_DATA_PATH}")
+print(f"Database path: {db_path}")
+print(f"Database file exists: {os.path.exists(db_path)}")
+if os.path.exists(db_path):
+    print(f"Database file size: {os.path.getsize(db_path)} bytes")
+print(f"Directory contents: {os.listdir(PERSISTENT_DATA_PATH)}")
+print(f"============================================")
 
 # Point DB to persistent location
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(PERSISTENT_DATA_PATH, 'barkrun.db').replace('\\', '/')
@@ -136,41 +144,92 @@ class Photo(db.Model):
 # --- App initialization helpers (no-shell DB bootstrap for Render) ---
 def _check_db_schema_exists():
     """Check if database schema already exists by querying for tables."""
+    print(f"=== SCHEMA CHECK DEBUG ===")
+    db_path = os.path.join(PERSISTENT_DATA_PATH, 'barkrun.db')
+    print(f"Checking database at: {db_path}")
+    print(f"Database file exists: {os.path.exists(db_path)}")
+    
     try:
         with app.app_context():
+            print(f"SQLAlchemy URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
             # Use inspector to safely check for table existence without querying data
             from sqlalchemy import inspect
             inspector = inspect(db.engine)
             tables = inspector.get_table_names()
             required_tables = {'user', 'race', 'result', 'photo'}
             schema_complete = required_tables.issubset(set(tables))
-            print(f"Schema check: Found tables {tables}, Complete: {schema_complete}")
+            print(f"Found tables: {tables}")
+            print(f"Required tables: {required_tables}")
+            print(f"Schema complete: {schema_complete}")
+            print(f"========================")
             return schema_complete
     except Exception as e:
-        print(f"Schema check failed: {e}")
+        print(f"Schema check FAILED with error: {e}")
+        print(f"Error type: {type(e).__name__}")
+        import traceback
+        print(f"Full traceback: {traceback.format_exc()}")
+        print(f"========================")
         return False
 
 def _initialize_db_and_admin():
     """Create tables and a default admin if the DB is fresh."""
+    print(f"=== INITIALIZATION DEBUG ===")
     with app.app_context():
         # Only create tables if schema doesn't exist
-        if not _check_db_schema_exists():
-            print("Creating database schema...")
-            db.create_all()
+        schema_exists = _check_db_schema_exists()
+        print(f"Schema exists result: {schema_exists}")
+        
+        if not schema_exists:
+            print("=== CREATING DATABASE SCHEMA ===")
+            try:
+                db.create_all()
+                print("Database schema created successfully")
+                # Verify creation worked
+                post_create_check = _check_db_schema_exists()
+                print(f"Post-creation schema check: {post_create_check}")
+            except Exception as e:
+                print(f"FAILED to create schema: {e}")
+                import traceback
+                print(f"Full traceback: {traceback.format_exc()}")
         else:
             print("Database schema already exists, skipping creation")
         
         # Create default admin only if none exists
-        if not User.query.filter_by(role='admin').first():
-            admin = User(
-                username='admin',
-                email='admin@barkrun.local',
-                name='Administrator',
-                role='admin',
-            )
-            admin.set_password('admin123')
-            db.session.add(admin)
-            db.session.commit()
+        print(f"=== ADMIN USER CHECK ===")
+        try:
+            existing_admin = User.query.filter_by(role='admin').first()
+            print(f"Existing admin found: {existing_admin is not None}")
+            if existing_admin:
+                print(f"Admin username: {existing_admin.username}")
+            
+            if not existing_admin:
+                print("Creating default admin user...")
+                admin = User(
+                    username='admin',
+                    email='admin@barkrun.local',
+                    name='Administrator',
+                    role='admin',
+                )
+                admin.set_password('admin123')
+                db.session.add(admin)
+                db.session.commit()
+                print("Default admin user created successfully")
+            else:
+                print("Admin user already exists, skipping creation")
+        except Exception as e:
+            print(f"FAILED admin user check/creation: {e}")
+            import traceback
+            print(f"Full traceback: {traceback.format_exc()}")
+        
+        print(f"=== FINAL STATE CHECK ===")
+        try:
+            total_users = User.query.count()
+            admin_count = User.query.filter_by(role='admin').count()
+            print(f"Total users in database: {total_users}")
+            print(f"Admin users in database: {admin_count}")
+        except Exception as e:
+            print(f"Failed to count users: {e}")
+        print(f"==============================")
 
 def _ensure_app_initialized_once():
     """Ensure instance paths exist and initialize DB on first boot.
