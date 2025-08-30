@@ -114,10 +114,24 @@ class Photo(db.Model):
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # --- App initialization helpers (no-shell DB bootstrap for Render) ---
+def _check_db_schema_exists():
+    """Check if database schema already exists by querying for tables."""
+    try:
+        with app.app_context():
+            # Try to query the User table to see if schema exists
+            db.session.execute(db.text("SELECT 1 FROM user LIMIT 1"))
+            return True
+    except Exception:
+        # If query fails, schema doesn't exist or is incomplete
+        return False
+
 def _initialize_db_and_admin():
     """Create tables and a default admin if the DB is fresh."""
     with app.app_context():
-        db.create_all()
+        # Only create tables if schema doesn't exist
+        if not _check_db_schema_exists():
+            db.create_all()
+        
         # Create default admin only if none exists
         if not User.query.filter_by(role='admin').first():
             admin = User(
@@ -132,14 +146,13 @@ def _initialize_db_and_admin():
 
 def _ensure_app_initialized_once():
     """Ensure instance paths exist and initialize DB on first boot.
-    This runs at process start and is idempotent due to file existence checks.
+    This runs at process start and is idempotent due to schema existence checks.
     """
     # Ensure uploads directory exists
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    # If the DB file does not exist, perform initialization
-    db_path = os.path.join(app.instance_path, 'barkrun.db')
-    if not os.path.exists(db_path):
-        _initialize_db_and_admin()
+    
+    # Always call initialization - it will check if schema exists
+    _initialize_db_and_admin()
 
 # Call after models are defined so queries work
 _ensure_app_initialized_once()
